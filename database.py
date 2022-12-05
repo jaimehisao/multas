@@ -20,12 +20,83 @@ conn = psycopg2.connect(
 cursor = conn.cursor()
 
 
+def is_plate_found(plate):
+    cursor.execute("SELECT found, found_mty FROM plates WHERE plate = %s", (plate,))
+    return cursor.fetchall()
+
+
+def mark_plate_as_candidate(plate):
+    cursor.execute("UPDATE plate_queue SET candidate = true WHERE plate = %s", (plate,))
+    conn.commit()
+
+
+def get_plate_queue() -> list:
+    """
+    Gets the plate queue from the database
+    :return: List of plates in the queue
+    """
+    cursor.execute("SELECT plate FROM plate_queue")
+    return cursor.fetchall()
+
+
+def add_plates_to_db_queue(plates: []) -> None:
+    """
+    Adds plates to the database queue
+    :param plates: List of plates to add
+    :return: None
+    """
+    for plate in plates:
+        cursor.execute("SELECT * FROM plate_queue WHERE plate = %s", (plate,))
+        if len(cursor.fetchall()) == 0:
+            print("Adding plate to queue: " + plate)
+            cursor.execute("INSERT INTO plate_queue(plate) VALUES (%s)", (plate,))
+            conn.commit()
+
+
+
 def get_stored_plates() -> list:
     """
     Gets all stored plates from the database
     :return: List of plates
     """
     cursor.execute("SELECT plate FROM plates")
+    return cursor.fetchall()
+
+
+def mark_as_found_mty(plate):
+    cursor.execute("UPDATE plates SET found_mty = true WHERE plate = %s", (plate,))
+    conn.commit()
+
+
+def get_found_mty_plates():
+    cursor.execute("SELECT plate FROM plates WHERE found_mty = true")
+    return cursor.fetchall()
+
+
+def add_ticket_mty(plate, tickets):
+    for tix in tickets:
+        cursor.execute(
+            "SELECT * FROM tickets WHERE ticket_number = %s", (tix["boleta"],)
+        )
+        if len(cursor.fetchall()) == 0:
+            cursor.execute(
+                "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, discount, total, plate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    tix["municipio"],
+                    tix["boleta"],
+                    tix["fecha"],
+                    tix["infraccion"],
+                    tix["crucero"],
+                    tix["descuento"],
+                    tix["monto"],
+                    plate,
+                ),
+            )
+            conn.commit()
+
+
+def get_found_plates():
+    cursor.execute("SELECT plate FROM plates WHERE found = true")
     return cursor.fetchall()
 
 
@@ -65,7 +136,7 @@ def add_new_tickets(plate: str, tickets: list) -> None:
         )
         if len(cursor.fetchall()) == 0:
             cursor.execute(
-                "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, value, discount, total, payment_date, reciept, payed, balance, plate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, value, discount, total, payment_date, reciept2, payed, balance, plate) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     multa["municipio"],
                     multa["boleta"],
