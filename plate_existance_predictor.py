@@ -1,44 +1,51 @@
 """
 Predicting the validity of a plate number based on the neighbor plaes. If a neighbor plate
-has a ticket (-20/+20), then the plate is considered valid but with no tickets, so it's status
+has a ticket (-7/+7), then the plate is considered valid but with no tickets, so it's status
 is updated as to give it preference when checking the plates periodically.
 """
-
-from database import get_plate_queue, is_plate_found, mark_plate_as_candidate
-from plates import generate_plates, generate_truck_plates, generate_s_style_plates
-
-CANDIDATE_NUMBER = 10 + 1
+import logging
+from database import is_plate_found, mark_plate_as_candidate, get_plate_queue
+from constants import CANDIDATE_PLATES_AFTER_POSITIVE_MATCH as CANDIDATE_NUMBER
 
 
-def next_plate_validity(plates):
+def next_plate_validity(plates: []) -> None:
+    """
+    Checks the validity of the neighbor plates of the plates in the database.
+    If the plate has a ticket, then the next plates are presumed valid and thus
+    marked as candidates.
+    :param plates: List of plates to check their validity
+    :return: None
+    """
     index = 0
-    for plate in plates:
+    non_tuple_plates = [item[0] for item in plates]
+    for plate in non_tuple_plates:
         is_found = is_plate_found(plate)
         if len(is_found) > 0:
             if bool(is_found[0][0]) or bool(is_found[0][1]):
-                next_twenty = plates[index + 1: index + CANDIDATE_NUMBER]
-                print("New candidate plates", str(next_twenty))
+                next_twenty = non_tuple_plates[index + 1: index + CANDIDATE_NUMBER]
+                logging.info("New candidate plates", str(next_twenty), "originally", plate)
                 for plate_tw in next_twenty:
                     mark_plate_as_candidate(plate_tw)
-            index += 1
+        index += 1
+
+        if index % 1000 == 0:
+            logging.info(
+                "Current progress: "
+                + str(index)
+                + "/"
+                + str(len(plates))
+                + " plates ("
+                + str(round(index / len(plates) * 100, 2))
+                + "%)"
+            )
 
 
-def see_if_neighbors_are_valid():
+def retrieve_plate_queue_and_check_validity_of_neighbhors():
     """
     Checks the validity of the neighbor plates of the plates in the database
     Storing all plates in memory, as to operate faster. Top of 7.5M records.
     Will live generate plates in order.
     :return: None
     """
-    # plates = get_plate_queue()
-
-    s_plates = generate_s_style_plates()
-    next_plate_validity(s_plates)
-    r_plates = generate_plates()
-    next_plate_validity(r_plates)
-    plates_truck = generate_truck_plates()
-    next_plate_validity(plates_truck)
-
-
-see_if_neighbors_are_valid()
-
+    plates = get_plate_queue()
+    next_plate_validity(plates)
