@@ -1,139 +1,175 @@
+from database import (
+    add_plate_if_non_existent,
+    add_new_spgg_tickets,
+    mark_plate_as_found,
+    mark_as_found_mty,
+    update_last_retrieved_to_right_now,
+    add_ticket_mty,
+    get_found_plates_and_last_query_time,
+    remove_candidate,
+    mark_candidate_last_checked_date_spgg,
+    update_last_retrieved_to_right_now_spgg,
+    mark_candidate_last_checked_date_mty,
+    update_last_retrieved_to_right_now_mty,
+    get_spgg_candidates,
+    get_candidates_mty,
+)
+from scraper import get_san_pedro_tickets_for_plate, get_monterrey_tickets_for_plate
+import datetime as dt
 import random
 
 
-def generate_truck_plates():
-    plates = []
-    letters = [
-        "A",
-        "B",
-        "C",
-        "D",
-        "E",
-        "F",
-        "G",
-        "H",
-        "I",
-        "J",
-        "K",
-        "L",
-        "M",
-        "N",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-        "T",
-        "U",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z",
-    ]
+QUERY_COOLDOWN_DAYS = 14
 
+
+# TODO add a function to update tickets, like payment date
+
+
+def pull_out_candidates():
     """
-     for letter in letters:
-        for i in range(25000):
-            plates.append("R" + letter + str(i).zfill(5))
+    Query candidate plates and check them against SPGG and MTY databases.
+    :return:
     """
+    pass
 
-    for i in range(10000):
-        # TODO, then remove S
-        plates.append("PS" + str(i).zfill(4) + "A")
-    random.shuffle(plates)
 
+def query_previously_found_plates():
     """
-        for letter in letters:
-            for i in range(100):
-                plates.append("P" + letter + str(i).zfill(4) + "A")
+    Query previously found plates and check them against SPGG and MTY databases.
+    Plates would be ordered by when they were found, and queried like that.
+    :return: None
     """
-    return plates
+    current_time = dt.datetime.now()
+    found_plates = list(get_found_plates_and_last_query_time())
+
+    for plate in found_plates:
+        # Doing San Pedro plates first
+        if current_time - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            san_pedro_tickets = get_san_pedro_tickets_for_plate(plate[0])
+            if len(san_pedro_tickets) > 0:
+                add_plate_if_non_existent(plate[0])
+                add_new_spgg_tickets(plate[0], san_pedro_tickets)
+                mark_plate_as_found(plate[0])
+
+            # Doing Monterrey plates
+            monterrey_tickets = get_monterrey_tickets_for_plate(plate[0])
+            if len(monterrey_tickets) > 0:
+                add_plate_if_non_existent(plate[0])
+                add_ticket_mty(plate[0], monterrey_tickets)
+                mark_as_found_mty(plate[0])
+
+            update_last_retrieved_to_right_now(plate[0])
 
 
-def generate_s_style_plates():
-    """Generate a list of plates.
-    First digit is either S, R, or T.
-    Last digit is a number when the first is an S, is A when the first is an R, and is a B when the first is a T.
-    """
-    plates = []
-    letters = [
-        "A",
-        "B",
-        "C",
-        "D",
-        "E",
-        "F",
-        "G",
-        "H",
-        "I",
-        "J",
-        "K",
-        "L",
-        "M",
-        "N",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-        "T",
-        "U",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z",
-    ]
-    # Four digit modification S**XXXX model
-    for letter in letters:
-        for letter2 in letters:
-            for i in range(10000):
-                plates.append("S" + letter + letter2 + str(i).zfill(4))
-    random.shuffle(plates)
-    return plates
+def query_candidate_plates_mty():
+    candidate_mty_plates = get_candidates_mty()
+    candidate_mty_plates = list(candidate_mty_plates)
+    len_candidate_mty_plates = len(candidate_mty_plates)
+    index = 0
+
+    random.shuffle(candidate_mty_plates)
+
+    for plate in candidate_mty_plates:
+        if plate[1] > dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            index += 1
+
+    print(
+        "Progress: ",
+        index,
+        "/",
+        len_candidate_mty_plates,
+        "(",
+        round(index / len_candidate_mty_plates * 100, 2),
+        "%)",
+    )
+
+    for plate in candidate_mty_plates:
+        if plate[1] < dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            print(
+                "Checking candidate plate: "
+                + plate[0]
+                + " ("
+                + str(index)
+                + "/"
+                + str(len_candidate_mty_plates)
+                + ")"
+            )
+            # Doing Monterrey plates
+            monterrey_tickets = get_monterrey_tickets_for_plate(plate[0])
+            if monterrey_tickets is not None:
+                if len(monterrey_tickets) > 0:
+                    add_plate_if_non_existent(plate[0])
+                    add_ticket_mty(plate[0], monterrey_tickets)
+                    mark_as_found_mty(plate[0])
+                    remove_candidate(plate[0])
+
+                mark_candidate_last_checked_date_mty(plate[0])
+                update_last_retrieved_to_right_now_mty(plate[0])
+
+                index += 1
+        if index % 500 == 0:
+            print(
+                "Progress: ",
+                index,
+                "/",
+                len_candidate_mty_plates,
+                "(",
+                round(index / len_candidate_mty_plates * 100, 2),
+                "%)",
+            )
 
 
-def generate_plates():
-    """Generate a list of plates.
-    First digit is either S, R, or T.
-    Last digit is a number when the first is an S, is A when the first is an R, and is a B when the first is a T.
-    """
-    initial = "RPG003A"
-    plates = []
-    letters = [
-        "A",
-        "B",
-        "C",
-        "D",
-        "E",
-        "F",
-        "G",
-        "H",
-        "I",
-        "J",
-        "K",
-        "L",
-        "M",
-        "N",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-        "T",
-        "U",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z",
-    ]
-    # Three digit modification R**XXXA model
-    if initial[0] == "R":
-        for letter in letters:
-            for letter2 in letters:
-                for i in range(1000):
-                    plates.append("R" + letter + letter2 + str(i).zfill(3) + "A")
-    random.shuffle(plates)
-    return plates
+def query_candidate_spgg_plates():
+    candidate_spgg_plates = list(get_spgg_candidates())
+    len_candidate_spgg_plates = len(candidate_spgg_plates)
+    index = 0
+
+    for plate in candidate_spgg_plates:
+        if plate[1] > dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            index += 1
+
+    print(
+        "Progress: ",
+        index,
+        "/",
+        len_candidate_spgg_plates,
+        "(",
+        round(index / len_candidate_spgg_plates * 100, 2),
+        "%)",
+    )
+
+    # random.shuffle(candidate_spgg_plates)
+
+    for plate in candidate_spgg_plates:
+        if plate[1] < dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            print(
+                "Checking candidate plate: "
+                + plate[0]
+                + " ("
+                + str(index)
+                + "/"
+                + str(len_candidate_spgg_plates)
+                + ")"
+            )
+            # Doing San Pedro plates first
+            san_pedro_tickets = get_san_pedro_tickets_for_plate(plate[0])
+            if len(san_pedro_tickets) > 0:
+                add_plate_if_non_existent(plate[0])
+                add_new_spgg_tickets(plate[0], san_pedro_tickets)
+                mark_plate_as_found(plate[0])
+                remove_candidate(plate[0])
+
+            mark_candidate_last_checked_date_spgg(plate[0])
+            update_last_retrieved_to_right_now_spgg(plate[0])
+
+            index += 1
+        if index % 500 == 0:
+            print(
+                "Progress: ",
+                index,
+                "/",
+                len_candidate_spgg_plates,
+                "(",
+                round(index / len_candidate_spgg_plates * 100, 2),
+                "%)",
+            )
