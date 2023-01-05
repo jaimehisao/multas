@@ -1,4 +1,4 @@
-from database import add_plates_to_db_queue
+from database import add_plates_to_queue
 import random
 
 
@@ -72,5 +72,5 @@ def generate_all_plates():
     print("Generated " + str(len(plates)) + " plates")
     random.shuffle(plates)
     print("Shuffled plates")
-    add_plates_to_db_queue(plates)
+    add_plates_to_queue(plates)
     print("Added plates to database")

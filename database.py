@@ -334,7 +334,7 @@ def is_plate_found(plate):
     return cursor.fetchall()
 
 
-def add_plates_to_db_queue(plates: []) -> None:
+def add_plates_to_queue(plates: []) -> None:
     """
     Adds plates to the database queue.
     :param plates: List of plates to add
@@ -416,7 +416,9 @@ def get_found_plates():
 
 def get_found_plates_and_last_query_time():
     cursor.execute(
-        "SELECT plate, last_retrieved FROM plates WHERE found = true or found_mty = true"
+        "SELECT plate, last_retrieved "
+        "FROM plates "
+        "WHERE found = true or found_mty = true"
     )
     return cursor.fetchall()
 
@@ -452,9 +454,9 @@ def add_new_spgg_tickets(plate: str, tickets: list) -> None:
     :return: None
     """
     # should check municipality
-    for multa in tickets:
+    for ticket in tickets:
         cursor.execute(
-            "SELECT * FROM tickets WHERE ticket_number = %s", (multa["boleta"],)
+            "SELECT * FROM tickets WHERE ticket_number = %s", (ticket["boleta"],)
         )
         if len(cursor.fetchall()) == 0:
             cursor.execute(
@@ -462,18 +464,18 @@ def add_new_spgg_tickets(plate: str, tickets: list) -> None:
                 "payment_date, reciept2, payed, balance, plate) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
-                    multa["municipio"],
-                    multa["boleta"],
-                    multa["fecha"],
-                    multa["infraccion"],
-                    multa["crucero"],
-                    multa["valor"],
-                    multa["descuento"],
-                    multa["total"],
-                    multa["fecha_pago"],
-                    multa["recibo"],
-                    multa["pagado"],
-                    multa["saldo"],
+                    ticket["municipio"],
+                    ticket["boleta"],
+                    ticket["fecha"],
+                    ticket["infraccion"],
+                    ticket["crucero"],
+                    ticket["valor"],
+                    ticket["descuento"],
+                    ticket["total"],
+                    ticket["fecha_pago"],
+                    ticket["recibo"],
+                    ticket["pagado"],
+                    ticket["saldo"],
                     plate,
                 ),
             )
