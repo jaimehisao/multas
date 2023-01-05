@@ -2,6 +2,7 @@ import psycopg2
 from dotenv import load_dotenv
 import os
 import datetime as dt
+import logging
 
 load_dotenv()
 
@@ -35,6 +36,15 @@ def clean_parking_meter_tickets():
         "WHERE ticket_type = 'No paga cuota parquimetro'"
     )
     conn.commit()
+
+
+"""
+There is prpobably a way to make the cleanups look more elegant and it would involve splitting this into two files, 
+then have one with only the before and after queries and then just have a single cursor and commit that iterate over
+all the options doing execute and then only commit once at the end. Efficiency wise, it is not hurtful to commit 
+often with this changes, as they happen every two minutes the impact of commiting after each statement is minimal 
+but we will still try to optimize any run by our program.
+"""
 
 
 def clean_prohibited_parking_space_tickets():
@@ -213,11 +223,11 @@ def update_last_retrieved_to_right_now_spgg(plate: str) -> None:
     :param date: Date to update to
     :return: None
     """
-    ts = dt.datetime.now()
+    current_timestamp = dt.datetime.now()
     cursor.execute(
         "UPDATE plates SET last_retrieved_spgg = %s WHERE plate = %s",
         (
-            ts,
+            current_timestamp,
             plate,
         ),
     )
@@ -244,7 +254,7 @@ def mark_plate_as_candidate(plate):
     has_been_found = cursor.fetchall()
     if len(has_been_found) > 0:
         # If a plate has been found (len!=0), it is not a candidate, because it has already been searched.
-        print(
+        logging.info(
             "Plate has already been found, not marking as candidate and deleting from queue."
         )
         cursor.execute(
@@ -334,7 +344,7 @@ def add_plates_to_db_queue(plates: []) -> None:
     for plate in plates:
         # cursor.execute("SELECT * FROM plate_queue WHERE plate = %s", (plate,))
         if index % 1000 == 0:
-            print(
+            logging.info(
                 "Current progress: "
                 + str(index)
                 + "/"
@@ -373,12 +383,12 @@ def get_found_mty_plates():
 
 
 def add_ticket_mty(plate, tickets):
-    for tix in tickets:
+    for ticket in tickets:
         cursor.execute(
             "SELECT * FROM tickets WHERE ticket_number = %s and ticket_type = %s",
             (
-                tix["boleta"],
-                tix["infraccion"],
+                ticket["boleta"],
+                ticket["infraccion"],
             ),
         )
         if len(cursor.fetchall()) == 0:
@@ -386,13 +396,13 @@ def add_ticket_mty(plate, tickets):
                 "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, discount, total, plate) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
-                    tix["municipio"],
-                    tix["boleta"],
-                    tix["fecha"],
-                    tix["infraccion"],
-                    tix["crucero"],
-                    tix["descuento"],
-                    tix["monto"],
+                    ticket["municipio"],
+                    ticket["boleta"],
+                    ticket["fecha"],
+                    ticket["infraccion"],
+                    ticket["crucero"],
+                    ticket["descuento"],
+                    ticket["monto"],
                     plate,
                 ),
             )
