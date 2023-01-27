@@ -10,4 +10,4 @@ docker push registry.internal.hisao.org/prod/plate-data-cleaning
 
 echo ""
 echo ""
-echo "Built and Pushed 3 Docker Images Successfully"
+echo "Built and Pushed 4 Docker Images Successfully"
