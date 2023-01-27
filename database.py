@@ -393,8 +393,8 @@ def add_ticket_mty(plate, tickets):
         )
         if len(cursor.fetchall()) == 0:
             cursor.execute(
-                "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, discount, total, plate) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, discount, total, plate, date_added_to_db) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     ticket["municipio"],
                     ticket["boleta"],
@@ -404,6 +404,7 @@ def add_ticket_mty(plate, tickets):
                     ticket["descuento"],
                     ticket["monto"],
                     plate,
+                    dt.datetime.now(),
                 ),
             )
             conn.commit()
@@ -461,8 +462,8 @@ def add_new_spgg_tickets(plate: str, tickets: list) -> None:
         if len(cursor.fetchall()) == 0:
             cursor.execute(
                 "INSERT INTO tickets(municipality, ticket_number, date, ticket_type, crossing, value, discount, total, "
-                "payment_date, reciept2, payed, balance, plate) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "payment_date, reciept2, payed, balance, plate, date_added_to_db) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     ticket["municipio"],
                     ticket["boleta"],
@@ -477,6 +478,7 @@ def add_new_spgg_tickets(plate: str, tickets: list) -> None:
                     ticket["pagado"],
                     ticket["saldo"],
                     plate,
+                    dt.datetime.now(),
                 ),
             )
             conn.commit()

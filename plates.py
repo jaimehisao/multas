@@ -17,10 +17,7 @@ from database import (
 from scraper import get_san_pedro_tickets_for_plate, get_monterrey_tickets_for_plate
 import datetime as dt
 import random
-
-
-QUERY_COOLDOWN_DAYS = 14
-
+from constants import QUERY_COOLDOWN_DAYS
 
 # TODO add a function to update tickets, like payment date
 
@@ -121,6 +118,7 @@ def query_candidate_plates_mty():
 
 def query_candidate_spgg_plates():
     candidate_spgg_plates = list(get_spgg_candidates())
+    random.shuffle(candidate_spgg_plates)
     len_candidate_spgg_plates = len(candidate_spgg_plates)
     index = 0
 
