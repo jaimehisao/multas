@@ -23,7 +23,6 @@ cursor = conn.cursor()
 ############ CLEANING ############
 ###################################
 def clean_parking_meter_tickets():
-
     # Parking Meter
     cursor.execute(
         "UPDATE tickets "
@@ -378,7 +377,12 @@ def mark_as_found_mty(plate):
 
 
 def get_found_mty_plates():
-    cursor.execute("SELECT plate FROM plates WHERE found_mty = true")
+    cursor.execute("SELECT plate, last_retrieved_mty FROM plates WHERE found_mty = true")
+    return cursor.fetchall()
+
+
+def get_found_spgg_plates():
+    cursor.execute("SELECT plate, last_retrieved_spgg FROM plates WHERE found = true")
     return cursor.fetchall()
 
 

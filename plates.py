@@ -12,7 +12,7 @@ from database import (
     mark_candidate_last_checked_date_mty,
     update_last_retrieved_to_right_now_mty,
     get_spgg_candidates,
-    get_candidates_mty,
+    get_candidates_mty, get_found_spgg_plates, get_found_mty_plates,
 )
 from scraper import get_san_pedro_tickets_for_plate, get_monterrey_tickets_for_plate
 import datetime as dt
@@ -20,14 +20,6 @@ import random
 from constants import QUERY_COOLDOWN_DAYS
 
 # TODO add a function to update tickets, like payment date
-
-
-def pull_out_candidates():
-    """
-    Query candidate plates and check them against SPGG and MTY databases.
-    :return:
-    """
-    pass
 
 
 def query_previously_found_plates():
@@ -56,6 +48,74 @@ def query_previously_found_plates():
                 mark_as_found_mty(plate[0])
 
             update_last_retrieved_to_right_now(plate[0])
+
+
+#####################################
+### UPDATING ALREADY FOUND PLATES ###
+#####################################
+
+def update_spgg_plates():
+    index = 0
+    previously_found_plates = list(get_found_spgg_plates())
+    len_prev = len(previously_found_plates)
+
+    for plate in previously_found_plates:
+        if plate[1] > dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            index += 1
+
+    for plate in previously_found_plates:
+        if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):  ## TODO CHECK IF RIGHT PARAM FROM QUERY
+            print("Updating plate:", plate[0])
+            san_pedro_tickets = get_san_pedro_tickets_for_plate(plate[0])
+            if len(san_pedro_tickets) > 0:  # COULD UPDATE TIX HERE TODO
+                add_new_spgg_tickets(plate[0], san_pedro_tickets)
+                update_last_retrieved_to_right_now_spgg(plate[0])
+        index += 1
+
+    if index % 500 == 0:
+        print(
+            "Progress: ",
+            index,
+            "/",
+            len_prev,
+            "(",
+            round(index / len_prev * 100, 2),
+            "%)",
+        )
+
+
+def update_mty_plates():
+    index = 0
+    previously_found_plates = list(get_found_mty_plates())
+    len_prev = len(previously_found_plates)
+
+    for plate in previously_found_plates:
+        if plate[1] > dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            index += 1
+
+    for plate in previously_found_plates:
+        if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):  ## TODO CHECK IF RIGHT PARAM FROM QUERY
+            print("Updating plate:", plate[0])
+            mty_tickets = get_monterrey_tickets_for_plate(plate[0])
+            if len(mty_tickets) > 0:  # COULD UPDATE TIX HERE TODO
+                add_ticket_mty(plate[0], mty_tickets)
+                update_last_retrieved_to_right_now_mty(plate[0])
+        index += 1
+
+    if index % 500 == 0:
+        print(
+            "Progress: ",
+            index,
+            "/",
+            len_prev,
+            "(",
+            round(index / len_prev * 100, 2),
+            "%)",
+        )
+
+########################
+### CANDIDATE PLATES ###
+########################
 
 
 def query_candidate_plates_mty():
