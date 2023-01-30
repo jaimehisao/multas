@@ -14,4 +14,4 @@ RUN apt-get update \
 
 COPY . .
 
-CMD ["python3", "main_updater_mty.py"]
+CMD ["python3", "main_updater_spgg.py"]

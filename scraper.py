@@ -95,9 +95,13 @@ def get_monterrey_tickets_for_plate(plate: str):
             time.sleep(1)
 
         try:
-            token = BeautifulSoup(x.text, "html.parser").find(
+            try:
+                token = BeautifulSoup(x.text, "html.parser").find(
                 "input", {"name": "__RequestVerificationToken"}
-            )["value"]
+                )["value"]
+            except AttributeError:
+                print("Error when getting token!")
+                return None
         except TypeError:
             print("Type Error In Verification Token!")
             x = None

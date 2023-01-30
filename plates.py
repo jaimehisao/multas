@@ -17,7 +17,8 @@ from database import (
 from scraper import get_san_pedro_tickets_for_plate, get_monterrey_tickets_for_plate
 import datetime as dt
 import random
-from constants import QUERY_COOLDOWN_DAYS
+from constants import QUERY_COOLDOWN_DAYS, cleanup_ticket_names
+
 
 # TODO add a function to update tickets, like payment date
 
@@ -65,9 +66,14 @@ def update_spgg_plates():
 
     for plate in previously_found_plates:
         if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):  ## TODO CHECK IF RIGHT PARAM FROM QUERY
-            print("Updating plate:", plate[0])
+            print("Updating plate #", index, "/", len_prev, ":", plate[0])
             san_pedro_tickets = get_san_pedro_tickets_for_plate(plate[0])
             if len(san_pedro_tickets) > 0:  # COULD UPDATE TIX HERE TODO
+                for tix in san_pedro_tickets:
+                    try:
+                        tix["infraccion"] = cleanup_ticket_names[tix["infraccion"]]
+                    except KeyError:
+                        pass
                 add_new_spgg_tickets(plate[0], san_pedro_tickets)
                 update_last_retrieved_to_right_now_spgg(plate[0])
         index += 1
@@ -94,10 +100,15 @@ def update_mty_plates():
             index += 1
 
     for plate in previously_found_plates:
-        if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):  ## TODO CHECK IF RIGHT PARAM FROM QUERY
-            print("Updating plate:", plate[0])
+        if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):
+            print("Updating plate #", index, "/", len_prev, ":", plate[0])
             mty_tickets = get_monterrey_tickets_for_plate(plate[0])
             if len(mty_tickets) > 0:  # COULD UPDATE TIX HERE TODO
+                for tix in mty_tickets:
+                    try:
+                        tix["infraccion"] = cleanup_ticket_names[tix["infraccion"]]
+                    except KeyError:
+                        pass
                 add_ticket_mty(plate[0], mty_tickets)
                 update_last_retrieved_to_right_now_mty(plate[0])
         index += 1
@@ -155,6 +166,13 @@ def query_candidate_plates_mty():
             monterrey_tickets = get_monterrey_tickets_for_plate(plate[0])
             if monterrey_tickets is not None:
                 if len(monterrey_tickets) > 0:
+
+                    for tix in monterrey_tickets:
+                        try:
+                            tix["infraccion"] = cleanup_ticket_names[tix["infraccion"]]
+                        except KeyError:
+                            pass
+
                     add_plate_if_non_existent(plate[0])
                     add_ticket_mty(plate[0], monterrey_tickets)
                     mark_as_found_mty(plate[0])
@@ -212,6 +230,13 @@ def query_candidate_spgg_plates():
             # Doing San Pedro plates first
             san_pedro_tickets = get_san_pedro_tickets_for_plate(plate[0])
             if len(san_pedro_tickets) > 0:
+
+                for tix in san_pedro_tickets:
+                    try:
+                        tix["infraccion"] = cleanup_ticket_names[tix["infraccion"]]
+                    except KeyError:
+                        pass
+
                 add_plate_if_non_existent(plate[0])
                 add_new_spgg_tickets(plate[0], san_pedro_tickets)
                 mark_plate_as_found(plate[0])
