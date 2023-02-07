@@ -61,10 +61,6 @@ def update_spgg_plates():
     len_prev = len(previously_found_plates)
 
     for plate in previously_found_plates:
-        if plate[1] > dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
-            index += 1
-
-    for plate in previously_found_plates:
         if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):  ## TODO CHECK IF RIGHT PARAM FROM QUERY
             print("Updating plate #", index, "/", len_prev, ":", plate[0])
             san_pedro_tickets = get_san_pedro_tickets_for_plate(plate[0])
@@ -76,6 +72,8 @@ def update_spgg_plates():
                         pass
                 add_new_spgg_tickets(plate[0], san_pedro_tickets)
                 update_last_retrieved_to_right_now_spgg(plate[0])
+        else:
+            print("Skipping plate #", index, "/", len_prev, ":", plate[0])
         index += 1
 
     if index % 500 == 0:
@@ -96,21 +94,22 @@ def update_mty_plates():
     len_prev = len(previously_found_plates)
 
     for plate in previously_found_plates:
-        if plate[1] > dt.datetime.now() - dt.timedelta(days=QUERY_COOLDOWN_DAYS):
-            index += 1
-
-    for plate in previously_found_plates:
         if dt.datetime.now() - plate[1] > dt.timedelta(days=QUERY_COOLDOWN_DAYS):
             print("Updating plate #", index, "/", len_prev, ":", plate[0])
             mty_tickets = get_monterrey_tickets_for_plate(plate[0])
             if len(mty_tickets) > 0:  # COULD UPDATE TIX HERE TODO
                 for tix in mty_tickets:
+                    print(tix["infraccion"])
+                    tix["infraccion"] = cleanup_ticket_names[tix["infraccion"]]
+                    print(tix["infraccion"])
                     try:
                         tix["infraccion"] = cleanup_ticket_names[tix["infraccion"]]
                     except KeyError:
                         pass
                 add_ticket_mty(plate[0], mty_tickets)
                 update_last_retrieved_to_right_now_mty(plate[0])
+        else:
+            print("Skipping plate #", index, "/", len_prev, ":", plate[0])
         index += 1
 
     if index % 500 == 0:
@@ -182,6 +181,7 @@ def query_candidate_plates_mty():
                 update_last_retrieved_to_right_now_mty(plate[0])
 
                 index += 1
+
         if index % 500 == 0:
             print(
                 "Progress: ",
