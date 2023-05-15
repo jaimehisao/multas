@@ -8,6 +8,7 @@ steps:
   settings:
     username: admin
     password: Harbor12345
-    repo: registry.internal.hisao.org
+    repo: registry.internal.hisao.org/prod/multas-spgg-candidates
+    registry: registry.internal.hisao.org
     tags:
     - latest
