@@ -7,7 +7,7 @@ steps:
   dockerfile: Dockerfile.candidates_spgg
   settings:
     username: admin
-    password: Harbor1234
+    password: Harbor12345
     repo: registry.internal.hisao.org
     tags:
     - latest
