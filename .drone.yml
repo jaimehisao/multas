@@ -1,7 +1,18 @@
 kind: pipeline
-name: Build
+name: Build and Push
 
 steps:
+- name: build base image
+  image: plugins/docker
+  settings:
+    username: admin
+    password: Harbor12345
+    repo: registry.internal.hisao.org/prod/multas-base
+    registry: registry.internal.hisao.org
+    dockerfile: Dockerfile.base
+    tags:
+    - latest
+
 - name: build candidates spgg
   image: plugins/docker
   settings:
