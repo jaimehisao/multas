@@ -23,3 +23,47 @@ steps:
     dockerfile: Dockerfile.candidates_spgg    
     tags:
     - latest
+
+- name: build candidates mty
+  image: plugins/docker
+  settings:
+    username: admin
+    password: Harbor12345
+    repo: registry.internal.hisao.org/prod/multas-mty-candidates
+    registry: registry.internal.hisao.org
+    dockerfile: Dockerfile.candidates_mty    
+    tags:
+    - latest
+
+- name: build updater spgg
+  image: plugins/docker
+  settings:
+    username: admin
+    password: Harbor12345
+    repo: registry.internal.hisao.org/prod/multas-spgg-updater
+    registry: registry.internal.hisao.org
+    dockerfile: Dockerfile.updater_spgg    
+    tags:
+    - latest
+
+- name: build updater mty
+  image: plugins/docker
+  settings:
+    username: admin
+    password: Harbor12345
+    repo: registry.internal.hisao.org/prod/multas-mty-updater
+    registry: registry.internal.hisao.org
+    dockerfile: Dockerfile.updater_spgg    
+    tags:
+    - latest
+
+- name: build candidates
+  image: plugins/docker
+  settings:
+    username: admin
+    password: Harbor12345
+    repo: registry.internal.hisao.org/prod/candidates
+    registry: registry.internal.hisao.org
+    dockerfile: Dockerfile.candidates
+    tags:
+    - latest
