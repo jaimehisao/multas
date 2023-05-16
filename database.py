@@ -10,8 +10,8 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 conn = psycopg2.connect(
-    user=DB_USER,
-    password=DB_PASSWORD,
+    user="apps",
+    password="apps_for_postgres_prod",
     host="databases.prod.hisao.org",
     port="5432",
     database="multas",
