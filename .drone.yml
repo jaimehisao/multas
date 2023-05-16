@@ -23,8 +23,6 @@ steps:
     dockerfile: Dockerfile.candidates_spgg    
     tags:
     - latest
-  depends_on:
-    - build base image
 
 - name: build candidates mty
   image: plugins/docker
@@ -36,8 +34,6 @@ steps:
     dockerfile: Dockerfile.candidates_mty    
     tags:
     - latest
-  depends_on:
-    - build base image
 
 - name: build updater spgg
   image: plugins/docker
@@ -49,8 +45,6 @@ steps:
     dockerfile: Dockerfile.updater_spgg    
     tags:
     - latest
-  depends_on:
-    - build base image
 
 - name: build updater mty
   image: plugins/docker
@@ -62,8 +56,6 @@ steps:
     dockerfile: Dockerfile.updater_spgg    
     tags:
     - latest
-  depends_on:
-    - build base image
 
 - name: build candidates
   image: plugins/docker
@@ -75,5 +67,3 @@ steps:
     dockerfile: Dockerfile.candidates
     tags:
     - latest
-  depends_on:
-    - build base image
